@@ -1,10 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Author: Yuki Furuta <furushchev@jsk.imi.i.u-tokyo.ac.jp>
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 import actionlib
 import rospy
 import speech_recognition as SR
+from aip import AipSpeech
+
+APP_ID = os.environ['BAIDU_APP_ID']
+API_KEY = os.environ[BAIDU_API_KEY'] 
+SECRET_KEY = os.environ['BAIDU_SECRET_KEY'] 
+
 
 from actionlib_msgs.msg import GoalStatus, GoalStatusArray
 from audio_common_msgs.msg import AudioData
@@ -25,7 +34,7 @@ class SpeechToText(object):
         self.tts_tolerance = rospy.Duration.from_sec(
             rospy.get_param("~tts_tolerance", 1.0))
 
-        self.recognizer = SR.Recognizer()
+        self.recognizer = AipSpeech(APP_ID, API_KEY, SECRET_KEY)
 
         self.tts_action = None
         self.last_tts = None
@@ -69,10 +78,17 @@ class SpeechToText(object):
         data = SR.AudioData(msg.data, self.sample_rate, self.sample_width)
         try:
             rospy.loginfo("Waiting for result %d" % len(data.get_raw_data()))
-            result = self.recognizer.recognize_google(
-                data, language=self.language)
-            msg = SpeechRecognitionCandidates(transcript=[result])
-            self.pub_speech.publish(msg)
+            result = self.recognizer.asr(data.get_raw_data(), 'pcm', 16000, {
+                    'dev_pid': 1536,
+                    })
+            if result['err_no']:
+                #rospy.loginfo(result["err_msg"])
+                return
+            rospy.loginfo(";".join(result["result"]))
+            #result = self.recognizer.recognize_google(
+            #    data, language=self.language)
+            #msg = SpeechRecognitionCandidates(transcript=[result])
+            #self.pub_speech.publish(msg)
         except SR.UnknownValueError as e:
             rospy.logerr("Failed to recognize: %s" % str(e))
         except SR.RequestError as e:
