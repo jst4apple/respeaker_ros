@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # Author: Yuki Furuta <furushchev@jsk.imi.i.u-tokyo.ac.jp>
 import sys
+import os
 reload(sys)
 sys.setdefaultencoding('utf8')
 
@@ -11,7 +12,7 @@ import speech_recognition as SR
 from aip import AipSpeech
 
 APP_ID = os.environ['BAIDU_APP_ID']
-API_KEY = os.environ[BAIDU_API_KEY'] 
+API_KEY = os.environ['BAIDU_API_KEY'] 
 SECRET_KEY = os.environ['BAIDU_SECRET_KEY'] 
 
 
@@ -39,6 +40,13 @@ class SpeechToText(object):
         self.tts_action = None
         self.last_tts = None
         self.is_canceling = False
+	self.is_sound_init = False
+
+        self.pub_speech = rospy.Publisher(
+            "speech_to_text", SpeechRecognitionCandidates, queue_size=1)
+        self.sub_audio = rospy.Subscriber("audio", AudioData, self.audio_cb)
+
+    def init_sound(self):
         if self.self_cancellation:
             self.tts_action = actionlib.SimpleActionClient(
                 "sound_play", SoundRequestAction)
@@ -47,10 +55,6 @@ class SpeechToText(object):
             else:
                 rospy.logerr("action '%s' is not initialized." % rospy.remap_name("sound_play"))
                 self.tts_action = None
-
-        self.pub_speech = rospy.Publisher(
-            "speech_to_text", SpeechRecognitionCandidates, queue_size=1)
-        self.sub_audio = rospy.Subscriber("audio", AudioData, self.audio_cb)
 
     def tts_timer_cb(self, event):
         stamp = event.current_real
@@ -72,6 +76,9 @@ class SpeechToText(object):
                 self.is_canceling = False
 
     def audio_cb(self, msg):
+        if not self.is_sound_init: 
+            self.init_sound()
+
         if self.is_canceling:
             rospy.loginfo("Speech is cancelled")
             return

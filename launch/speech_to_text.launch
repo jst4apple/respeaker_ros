@@ -1,0 +1,11 @@
+<launch>
+
+  <node name="speech_to_text" pkg="respeaker_ros" output="screen" type="speech_to_text.py">
+    <remap from="audio" to="speech_audio"/>
+    <rosparam>
+      language: ja-JP
+      self_cancellation: true
+      tts_tolerance: 0.5
+    </rosparam>
+  </node>
+</launch>
