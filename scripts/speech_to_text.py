@@ -44,7 +44,8 @@ class SpeechToText(object):
 
         self.pub_speech = rospy.Publisher(
             "speech_to_text", SpeechRecognitionCandidates, queue_size=1)
-        self.sub_audio = rospy.Subscriber("audio", AudioData, self.audio_cb)
+        #self.sub_audio = rospy.Subscriber("audio", AudioData, self.audio_cb)
+        self.sub_audio = rospy.Subscriber("speech_audio", AudioData, self.audio_cb)
 
     def init_sound(self):
         if self.self_cancellation:
@@ -76,8 +77,8 @@ class SpeechToText(object):
                 self.is_canceling = False
 
     def audio_cb(self, msg):
-        if not self.is_sound_init: 
-            self.init_sound()
+        #if not self.is_sound_init: 
+        #    self.init_sound()
 
         if self.is_canceling:
             rospy.loginfo("Speech is cancelled")
@@ -86,7 +87,7 @@ class SpeechToText(object):
         try:
             rospy.loginfo("Waiting for result %d" % len(data.get_raw_data()))
             result = self.recognizer.asr(data.get_raw_data(), 'pcm', 16000, {
-                    'dev_pid': 1536,
+                    'dev_pid': 1936#1536,
                     })
             if result['err_no']:
                 #rospy.loginfo(result["err_msg"])
