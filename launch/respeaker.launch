@@ -1,7 +1,10 @@
 <launch>
   <node name="respeaker_node" pkg="respeaker_ros" type="respeaker_node.py"
-	output="screen"/>
-
+	output="screen">
+<rosparam>
+speech_max_duration: 15
+</rosparam>
+ </node>
   <node name="static_transformer" pkg="tf" type="static_transform_publisher"
         args="0 0 0 0 0 0 map respeaker_base 100"/>
 
